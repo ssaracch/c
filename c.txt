@@ -59,14 +59,20 @@ public static void main(String[] args) {
 		MessageProducer producer = session.createProducer(topic);
 		producer.SetDeliveryMode(DeliveryMode_PERSISTENT);
 		
-		Scanner scanner=new Scanner(System.in);
-		String notif="notif";
-		
-		TextMessage message = session.createTextMessage(notif);
-		
-		producer.send(message);
-		System.out.println("notif sent"+ notif);
-		notif=scanner.nextLine();
+		Scanner scanner = new Scanner(System.in);
+//            String notification = "System Notification: Maintenance scheduled at 2 AM.";
+//            while (true) {
+//
+//                if ("exit".equalsIgnoreCase(notification)) {
+//                    System.out.println("Exiting System...");
+//                    break;
+//                }
+//                TextMessage message = session.createTextMessage(notification);
+//                //message.setText(notification);
+//                producer.send(message);
+//                System.out.println("Notification sent: " + notification);
+//                notification= scanner.nextLine();
+//            }
 		
 		
 	}
