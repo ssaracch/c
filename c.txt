@@ -1,0 +1,277 @@
+CORBA--------------------------------------
+---------ServerImp 
+import Calcutator.ICalculatorPOA;
+
+public class ServerImp extends ICalculatorPOA{
+	public long somme(long a , long b) {
+		return a+b;
+	}
+	@Override
+	public int somme(int a, int b) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+}
+-------CorbaServer 
+public class CorbaServer {
+	public static void main(String[] args) {
+		try {
+			ORB orb = ORB.init(args , null);
+			POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+			rootpoa.the_POAManager().activate();
+			ServerImp SImp = new ServerImp();
+			InitialContext ctx = new InitialContext();
+			ctx.rebind("calc", rootpoa.servant_to_reference(SImp));
+			System.out.println("server is ready");
+			orb.run();
+				
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+}
+----------Client
+public class Main {
+
+	public static void main(String[] args) throws NamingException{
+		InitialContext context = new InitialContext();
+		Object object=context.lookup("calc");
+		Icalculator stub=IcalculatorHelper.narrow((org.omg.CORBA.Object)object);
+		System.out.println(stub.somme(5, 7));				
+	}
+}
+
+
+
+
+JMS-----------------------------
+----producer 
+public static void main(String[] args) {
+		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+		Connection connection = connectionFactory.createConnection();
+		connection.start();
+		
+		Session session =connection.createSession(false , Session.AUTO_ACKNOWLEDGE);
+		System.out.println("connected successfully");
+		
+		Destination topic=session.createTopic("topiccc");
+		
+		MessageProducer producer = session.createProducer(topic);
+		producer.SetDeliveryMode(DeliveryMode_PERSISTENT);
+		
+		Scanner scanner=new Scanner(System.in);
+		String notif="notif";
+		
+		TextMessage message = session.createTextMessage(notif);
+		
+		producer.send(message);
+		System.out.println("notif sent"+ notif);
+		notif=scanner.nextLine();
+		
+		
+	}
+
+
+----consumer
+
+public static void main(String[] args) {
+
+		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+		Connection connection = connectionFactory.createConnection();
+		connection.setClientID("aaa");
+		connection.start();
+		
+		Session session=connection.createSession(false , Session.AUTO_ACKNOWLEDGE);
+		
+		Destination topic=session.createTopic("topiccc");
+		
+		MessageConsumer consumer =session.createDurableSubscriber((Topic) topic ,"DurableSub1");
+		
+		System.out.println("waiting for notif...");
+		
+		while (true) {
+			TextMessage message = consumer.recieve();
+			if (message instanceof TextMessage) {
+				TextMessage txtmsg=new (TextMessage) message;
+				System.out.println("notif recieved:" txtmsg);
+			} else {
+				System.out.println("message is not a text");
+
+			}
+			
+		}
+	}
+
+
+
+
+
+
+
+
+
+En résumé :
+-Middleware est essentiel pour les applications distribuées, permettant la communication et l’interopérabilité.
+
+-RMI et CORBA sont des technologies Java pour l’appel de méthodes distantes et la gestion des objets distribués.
+
+-JMS offre un système de messagerie asynchrone, ce qui est utile pour le découplage des applications et la gestion des transactions sur des systèmes distribués.
+
+
+
+
+
+
+
+
+
+
+
+---------Middleware :
+1. Middleware :
+Le middleware est un logiciel qui facilite la communication entre processus distribués. Il permet l'interopérabilité entre systèmes hétérogènes et la portabilité des applications.
+
+Types de Middleware :
+-Middleware de Messages (JMS, JORAM) pour la communication asynchrone.
+-RPC pour l'appel de procédures distantes.Exemple de SOAP, XML-RPC.
+-Object Request Broker (ORB) (RMI, CORBA) pour la gestion des objets distribués.
+-Middleware de Données pour l'accès aux bases de données distantes.
+-Middleware Transactionnel : Utilisé pour garantir la gestion des transactions sur plusieurs systèmes distribués.
+-Modèle Publish-Subscribe :Le modèle de publication-abonnement permet à un client de s'abonner à un message. Quand ce message est déclenché, il est envoyé à tous les clients abonnés.
+
+Fonctions du Middleware :
+-Interface de Haut Niveau 
+-Transparence 
+-Interopérabilité et Portabilité 
+
+Services, Contrats et Interfaces :
+Un service dans un middleware est un comportement défini par un contrat, accessible par une ou plusieurs interfaces.
+
+
+
+
+
+
+
+
+-------------Modèle Client-Serveur :
+Définition : Dans ce modèle, un client envoie des requêtes à un serveur pour obtenir des services distants via des messages, plutôt que par un partage de mémoire ou de fichiers. Le serveur répond à ces requêtes.
+Communication par messages : L'échange de messages inclut une requête et une réponse. Par exemple, un appel de procédure est effectué par le client, et le serveur retourne les résultats.
+Exemples de services : Serveurs de fichiers, serveurs de calcul, serveurs de base de données, etc.
+
+2. Principes du Remote Procedure Call (RPC) :
+RPC (Remote Procedure Call) permet d’exécuter des procédures distantes de manière transparente pour le programmeur.
+Les appels sont effectués à travers des talons (stubs) sur le client et des squelettes (skeletons) sur le serveur.
+
+3. Problèmes avec RPC :
+Perte de message : Des mécanismes sont mis en place pour réémettre les messages en cas de perte.
+Défaillances : Le système doit gérer des pannes de réseau, de serveur ou de client.
+Sécurité et performance : Il y a des enjeux de sécurité (authentification, confidentialité) et des problèmes de performance.
+
+4. Java RMI (Remote Method Invocation) :
+RMI est une extension du RPC dans le cadre de Java, permettant l'interaction entre objets répartis sur différentes machines.
+
+Fonctionnement : Le serveur crée un objet et enregistre un stub dans un annuaire. Le client récupère ce stub via l'annuaire et appelle la méthode distante comme s’il s’agissait d’une méthode locale.
+RMI et sérialisation : Les objets sont sérialisés pour être envoyés sur le réseau, et les références d'objets distants sont gérées par le stub.
+
+5. Compilation et déploiement en RMI :
+Compilation : Le code source du client, du serveur et de l’interface doit être compilé avec javac. Ensuite, les stubs et skeletons sont générés via rmic.
+Déploiement : Le serveur de noms (rmiregistry) doit être activé avant de lancer le serveur et le client.
+
+6. Limites du Modèle Client-Serveur et RMI :
+Le modèle RPC est considéré comme bas niveau et nécessite des services supplémentaires pour la gestion des applications distribuées (sécurité, fichiers répartis).
+
+
+
+
+
+
+
+
+
+---------------Introduction à CORBA :
+CORBA est une architecture middleware pour faciliter l'interopérabilité entre applications distribuées et hétérogènes, en permettant la communication entre objets distribués sur différentes machines et langages.
+Il est basé sur un modèle client-serveur, où les clients interagissent avec des objets distants via un Object Request Broker (ORB), qui agit comme un médiateur pour isoler les clients des serveurs.
+
+2. Caractéristiques de CORBA :
+-Isolation des clients et serveurs
+-Communication synchrone et asynchrone
+-Dynamisme
+
+-Object Management Architecture (OMA) et OMG IDL sont utilisés pour définir des interfaces et des objets, et gérer les références entre objets distants.
+
+3. Object Management Architecture (OMA) :
+-ORB (Object Request Broker) : Permet l'interopérabilité et la portabilité des objets dans un environnement hétérogène.
+-CorbaServices : Fournissent des services pour gérer les objets, comme le cycle de vie, la sécurité, la gestion des transactions, etc.
+-CorbaFacilities : Incluent des services pour les applications comme l'accès aux bases de données, la synchronisation, etc.
+
+4. OMG IDL (Interface Definition Language) :
+Utilisé pour décrire les interfaces des objets dans CORBA. Cela permet de générer des stubs (pour le client) et des skeletons (pour le serveur) qui permettent l'appel de méthodes distantes.
+
+5. Interopérabilité et Références Objet :
+-IOR (Interoperable Object References) : Contient toutes les informations nécessaires pour localiser et interagir avec un objet CORBA, en utilisant un ou plusieurs protocoles de transport.
+-GIOP/IIOP : Protocoles utilisés pour la communication entre ORBs distincts. IIOP est spécifique pour les échanges sur TCP/IP.
+
+6. Services de Nommage et Référencement :
+CORBA utilise un service de nommage pour localiser les objets distants à partir d'un nom symbolique. Le service de nommage permet de récupérer des objets CORBA à partir de leur nom via des méthodes comme bind(), rebind(), et resolve().
+
+7. CorbaServices :
+-Transaction et Concurrency Services : Gestion des transactions et du parallélisme entre objets.
+-Sécurité : Contrôle l'accès aux objets en fonction de l'identité du client et de la gestion des clients autorisés.
+-Gestion des événements : Permet la notification d'événements entre objets, par exemple, pour la mise à jour des états.
+
+8. Développement avec CORBA :
+Les étapes incluent la définition de l'interface avec IDL, la génération des stubs et skeletons, le développement du code fonctionnel côté serveur et client, et la distribution de l'objet via l'ORB.
+
+9. Interoperabilité entre ORBs (CORBA 2.0) :
+CORBA 2.0 définit des normes d'interopérabilité entre ORBs de différents fournisseurs, avec des passerelles permettant la communication entre des systèmes utilisant différents protocoles.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------JMS
+1. Définition de JMS :
+JMS est une API Java qui permet aux applications de communiquer en envoyant et recevant des messages de manière asynchrone. 
+
+2. Principes de JMS :
+-Message-Oriented Middleware (MOM) : JMS est une forme de middleware qui repose sur la communication de messages entre producteurs (clients) et consommateurs (serveurs) de messages.
+-Asynchrone : Les messages peuvent être envoyés sans que l’expéditeur n'attende une réponse immédiate, ce qui permet une meilleure gestion des ressources et de la charge.
+
+3. Composants de JMS :
+-Producteur de message (Producer) : L'entité qui crée et envoie des messages dans la file d'attente ou le sujet.
+-Consommateur de message (Consumer) : L'entité qui reçoit et traite les messages envoyés par le producteur.
+-Destination : L'endroit où les messages sont envoyés. Il existe deux types :
+	-File d'attente (Queue) : Utilisée dans le modèle point à point, où chaque message est consommé par un seul 	consommateur.
+	-Sujet (Topic) : Utilisé dans le modèle publish/subscribe, où les messages sont envoyés à plusieurs abonnés.
+-JMS Provider : Le serveur de messagerie qui gère l'envoi, la réception et le stockage des messages. Il peut être un produit commercial ou open-source comme ActiveMQ, RabbitMQ, etc.
+
+4. Modèles de communication JMS :
+-Point à point (Queue) : Dans ce modèle, un message envoyé à une file d'attente est consommé par un seul consommateur. Chaque message a un seul destinataire.
+-Publish/Subscribe (Topic) : Dans ce modèle, les messages envoyés à un sujet sont reçus par plusieurs abonnés (consommateurs), ce qui permet de diffuser un message à plusieurs destinataires simultanément.
+
+5. Types de messages JMS :
+Message Textuel (TextMessage) : Contient des données textuelles sous forme de chaîne de caractères.
+Message d’Objet (ObjectMessage) : Contient un objet Java sérialisé.
+Message de Flux (StreamMessage) : Contient une séquence de primitives Java.
+Message de Map (MapMessage) : Contient un ensemble de paires clé-valeur.
+Message Binaire (BytesMessage) : Contient des données binaires.
+
+6. Gestion des transactions et des accuses de réception :
+-Transactions JMS : JMS permet de gérer les transactions sur les messages, assurant l’intégrité des messages dans un environnement de messagerie distribué.ce qui garantit qu’ils sont livrés de manière fiable.
+-Accusé de réception (Acknowledgement) : Le consommateur peut envoyer un accusé de réception pour indiquer que le message a été reçu et traité correctement. Cela peut être automatique, manuel ou client-acknowledged.
+
+7. Avantages de JMS :
+-Asynchrone : La communication ne nécessite pas que le producteur attende une réponse immédiate, ce qui rend le système plus réactif et évolutif.
+-Fiabilité : La gestion des transactions et des accusés de réception permet de garantir que les messages sont livrés de manière fiable.
+-Découplage : Le producteur et le consommateur n’ont pas besoin de se connaître directement, ce qui permet une plus grande flexibilité dans la conception des systèmes.
