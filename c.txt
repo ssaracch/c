@@ -13,7 +13,7 @@ public class ServerImp extends ICalculatorPOA{
 	}
 }
 -------CorbaServer 
-public class CorbaServer {
+public class CorbaServer throws NamingException, InvalidName, AdapterInactive, WrongPolicy, ServantNotActive {
 	public static void main(String[] args) {
 		try {
 			ORB orb = ORB.init(args , null);
